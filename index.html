@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Avery 3×8 PDF-Etiketten – FINAL (multiline + iPhone-fix)</title>
+<title>Avery 3×8 Etiketten – FINALE VERSION</title>
 
 <!-- pdf-lib -->
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
@@ -40,6 +40,7 @@ body {
   margin: auto;
   background: white;
   padding: 12.7mm 7.5mm;
+
   display: grid;
   grid-template-columns: repeat(3, 63.5mm);
   grid-template-rows: repeat(8, 38.1mm);
@@ -55,7 +56,7 @@ body {
 }
 
 .absender {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
@@ -81,6 +82,7 @@ body {
 </head>
 
 <body>
+
 <div class="topbar">
   <button class="btn reset-btn" onclick="resetAll()">Reset</button>
   <button class="btn pdf-btn" onclick="makePDF()">PDF erstellen</button>
@@ -90,9 +92,11 @@ body {
 
 <script>
 const LABELS = 24;
-const absenderText = "Abs.: Fatih Kaplan · Agnes-Miegel-Weg 16a · 42553 Velbert";
 
-/* PAGE BUILD */
+// ⭐ FINAL PASSENDE ABSENDERZEILE
+const absenderText = "Abs.: F. Kaplan · A.-M.-Weg 16a · 42553 Velbert";
+
+/* HTML erzeugen */
 for (let i = 1; i <= LABELS; i++) {
   document.getElementById("sheet").insertAdjacentHTML("beforeend", `
     <div class="label">
@@ -112,22 +116,26 @@ window.onload = () => {
     document.getElementById("sel_" + i).checked = c;
   }
 };
-function saveText(id) { localStorage.setItem(id, document.getElementById(id).innerText); }
-function saveCheck(id) { localStorage.setItem(id, document.getElementById(id).checked); }
+function saveText(id){ localStorage.setItem(id, document.getElementById(id).innerText); }
+function saveCheck(id){ localStorage.setItem(id, document.getElementById(id).checked); }
 
 /* RESET */
-function resetAll() {
-  for (let i = 1; i <= LABELS; i++) {
-    document.getElementById("emp_" + i).innerText = "";
-    document.getElementById("sel_" + i).checked = false;
-    localStorage.removeItem("emp_" + i);
-    localStorage.removeItem("sel_" + i);
+function resetAll(){
+  for (let i = 1; i <= LABELS; i++){
+    document.getElementById("emp_"+i).innerText = "";
+    document.getElementById("sel_"+i).checked = false;
+    localStorage.removeItem("emp_"+i);
+    localStorage.removeItem("sel_"+i);
   }
   alert("Alles zurückgesetzt!");
 }
 
-/* PDF-GENERATOR (pdf-lib multiline + iPhone-download) */
+/* ------------------------ */
+/*      PDF-GENERATOR       */
+/* ------------------------ */
+
 async function makePDF() {
+
   const pdfDoc = await PDFLib.PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4
   const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
@@ -135,13 +143,17 @@ async function makePDF() {
 
   const labelW = 63.5, labelH = 38.1, marginX = 7.5, marginY = 12.7, gapX = 2.5;
 
+  // ⭐ Textumbruch
   function wrapText(text, maxWidthPt, fontSize) {
     const words = text.split(" ");
-    let lines = [], current = "";
+    let lines = [];
+    let current = "";
+
     for (let word of words) {
       const test = current.length === 0 ? word : current + " " + word;
       if (font.widthOfTextAtSize(test, fontSize) > maxWidthPt) {
-        lines.push(current); current = word;
+        lines.push(current);
+        current = word;
       } else current = test;
     }
     lines.push(current);
@@ -149,37 +161,62 @@ async function makePDF() {
   }
 
   for (let i = 1; i <= LABELS; i++) {
+
     if (!document.getElementById("sel_" + i).checked) continue;
-    const emp = document.getElementById("emp_" + i).innerText.trim();
 
-    const col = (i - 1) % 3;
-    const row = Math.floor((i - 1) / 3);
-    const x_mm = marginX + col * (labelW + gapX);
-    const y_mm = marginY + row * labelH;
-    const x = mm(x_mm), y = 842 - mm(y_mm) - mm(labelH);
+    let emp = document.getElementById("emp_" + i).innerText.trim();
 
-    // Absender
-    page.drawText(absenderText, { x: x, y: y + mm(labelH) - mm(5), size: 8.5, font });
+    let col = (i - 1) % 3;
+    let row = Math.floor((i - 1) / 3);
 
-    // Empfänger (multiline)
-    const fontSize = 11, lineHeight = 12;
+    let x = mm(marginX + col * (labelW + gapX));
+    let yTop = 842 - mm(marginY + row * labelH);
+
+    // ⭐ Koordinaten
+    let yBase = yTop - mm(labelH);
+
+    // ⭐ Absender
+    page.drawText(absenderText, {
+      x: x,
+      y: yBase + mm(labelH) - mm(6),
+      size: 8,
+      font
+    });
+
+    // ⭐ Empfänger (multiline)
+    const fontSize = 11;
     const maxWidthPt = mm(labelW - 4);
+    const lineHeight = 12;
+
     const lines = wrapText(emp.replace(/\n/g, " "), maxWidthPt, fontSize);
-    let startY = y + mm(labelH) - mm(15);
+
+    let yText = yBase + mm(labelH) - mm(16);
+
     for (let line of lines) {
-      if (startY < y + 5) break;
-      page.drawText(line, { x: x, y: startY, size: fontSize, font });
-      startY -= lineHeight;
+      if (yText < yBase + 4) break;
+      page.drawText(line, {
+        x: x,
+        y: yText,
+        size: fontSize,
+        font
+      });
+      yText -= lineHeight;
     }
   }
 
   const pdfBytes = await pdfDoc.save();
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
+
+  // ⭐ iPhone-Fix – Direktdownload statt neues Fenster
   const a = document.createElement("a");
-  a.href = url; a.download = "etiketten.pdf";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  a.href = url;
+  a.download = "etiketten.pdf";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 </script>
+
 </body>
 </html>
