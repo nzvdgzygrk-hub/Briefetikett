@@ -4,250 +4,182 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Avery Etiketten 3×8 – iPhone Fix + Autosave</title>
+<title>Avery 3×8 PDF-Etiketten – Autosave + Reset</title>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-
-/* iPhone + Safari: Erzwinge echtes DIN-A4 Druckformat */
-@page {
-    size: A4;
-    margin: 0;
-}
-
-html, body {
-    width: 210mm;
-    height: 297mm;
-    margin: 0;
-    padding: 0;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+body {
     font-family: Arial, sans-serif;
     background: #f5f5f5;
+    margin: 0;
+    padding: 15px;
 }
 
-/* Reset Button */
+/* UI oben */
 .topbar {
     max-width: 210mm;
-    margin: 10px auto;
+    margin: 0 auto 10px auto;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
 }
-.reset-btn {
-    background: #d9534f;
-    color: white;
+
+.btn {
     padding: 10px 14px;
     border-radius: 6px;
     border: none;
     font-size: 16px;
+    cursor: pointer;
+    color: white;
 }
+.reset-btn { background: #d9534f; }
+.pdf-btn   { background: #0275d8; }
 
-/* Avery Zweckform 3×8 Layout */
+/* Avery Layout Vorschau (nur UI, PDF wird separat erzeugt) */
 .sheet {
-    position: relative;
-    width: 210mm;
-    height: 297mm;
-
-    padding: 12.7mm 7.5mm;
+    max-width: 210mm;
+    margin: auto;
     background: white;
-    box-sizing: border-box;
-
+    padding: 12.7mm 7.5mm;
     display: grid;
     grid-template-columns: repeat(3, 63.5mm);
     grid-template-rows: repeat(8, 38.1mm);
     grid-column-gap: 2.5mm;
-    grid-row-gap: 0;
 }
 
-/* Das sichtbare normale Label */
 .label {
-    border: 1px solid #000;
     background: #fff;
     padding: 3px;
-    box-sizing: border-box;
+    border: 1px solid #ddd;
     position: relative;
-    font-size: 11px;
+    box-sizing: border-box;
 }
 
-/* Absender – immer eine Zeile */
 .absender {
     font-size: 9px;
     font-weight: bold;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 2px;
 }
 
-/* Empfänger – fix hohe Box */
 .empfaenger {
-    border: 1px dashed #555;
-    height: 26mm;
-    padding: 3px;
-    box-sizing: border-box;
     font-size: 11px;
-    white-space: pre-line;
+    margin-top: 2px;
+    height: 26mm;
     overflow: hidden;
-}
-.empfaenger:focus {
-    outline: 2px solid #007AFF;
-    background: #eef6ff;
+    white-space: pre-line;
+    border: 1px dashed #aaa;
+    padding: 3px;
 }
 
-/* Checkbox */
 .selector {
     position: absolute;
     top: 2px;
     right: 2px;
     transform: scale(1.3);
 }
-
-/* Spiegel-Drucklayer (unsichtbar am Bildschirm) */
-#printLayer {
-    display: none;
-}
-
-/* Bei Druck: nur den PrintLayer anzeigen */
-@media print {
-
-    body * {
-        visibility: hidden !important;
-    }
-
-    #printLayer, #printLayer * {
-        visibility: visible !important;
-    }
-
-    #printLayer {
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
-}
-
 </style>
 
 <script>
-
 const LABELS = 24;
+const absender = "Abs.: Fatih Kaplan · Agnes-Miegel-Weg 16a · 42553 Velbert";
 
-/* LOAD SAVED DATA */
-window.onload = function() {
-
+/* LOAD SAVED */
+window.onload = () => {
     for (let i = 1; i <= LABELS; i++) {
+        let t = localStorage.getItem("emp_"+i);
+        let c = localStorage.getItem("sel_"+i)==="true";
 
-        let txt = localStorage.getItem("empfaenger_" + i);
-        let checked = localStorage.getItem("selector_" + i) === "true";
-
-        if (txt) document.getElementById("empfaenger_" + i).innerText = txt;
-        document.getElementById("selector_" + i).checked = checked;
+        if (t) document.getElementById("emp_"+i).innerText = t;
+        document.getElementById("sel_"+i).checked = c;
     }
-
-    buildPrintLayer();
 };
 
-/* Autosave */
-function autosave(id) {
-    localStorage.setItem(id, document.getElementById(id).innerText);
-}
-function autosaveCheck(id) {
-    const el = document.getElementById(id);
-    localStorage.setItem(id, el.checked);
-    buildPrintLayer();
-}
+/* AUTOSAVE */
+function saveText(id){ localStorage.setItem(id, document.getElementById(id).innerText); }
+function saveCheck(id){ localStorage.setItem(id, document.getElementById(id).checked); }
 
 /* RESET */
-function resetAll() {
-
-    for (let i = 1; i <= LABELS; i++) {
-        document.getElementById("empfaenger_" + i).innerText = "";
-        document.getElementById("selector_" + i).checked = false;
-
-        localStorage.removeItem("empfaenger_" + i);
-        localStorage.removeItem("selector_" + i);
+function resetAll(){
+    for(let i=1;i<=LABELS;i++){
+        document.getElementById("emp_"+i).innerText="";
+        document.getElementById("sel_"+i).checked=false;
+        localStorage.removeItem("emp_"+i);
+        localStorage.removeItem("sel_"+i);
     }
-
-    buildPrintLayer();
     alert("Alles zurückgesetzt!");
 }
 
-/* Build PRINT MIRROR LAYER */
-function buildPrintLayer() {
+/* PDF GENERATOR */
+async function makePDF(){
 
-    let html = "";
+    const { jsPDF } = window.jspdf;
 
-    for (let i = 1; i <= LABELS; i++) {
+    let pdf = new jsPDF({
+        unit: "mm",
+        format: "a4"
+    });
 
-        let checked = document.getElementById("selector_" + i).checked;
-        let text = document.getElementById("empfaenger_" + i).innerText;
+    /* Avery Maße */
+    const labelW = 63.5;
+    const labelH = 38.1;
+    const marginX = 7.5;
+    const marginY = 12.7;
+    const gapX = 2.5;
 
-        if (!checked) continue;
+    let index = 0;
 
-        html += `
-        <div style="
-            border:1px solid #000;
-            box-sizing:border-box;
-            padding:3px;
-            font-size:11px;
-            width:63.5mm;
-            height:38.1mm;
-            position:absolute;
-            left:${((i-1)%3)*66}mm;
-            top:${(Math.floor((i-1)/3))*38.1}mm;
-        ">
-            <div style="font-size:9px;font-weight:bold;">
-                Abs.: Fatih Kaplan · Agnes-Miegel-Weg 16a · 42553 Velbert
-            </div>
-            <div style="
-                border:1px dashed #555;
-                height:26mm;
-                white-space:pre-line;
-                font-size:11px;
-                padding:3px;
-                overflow:hidden;
-            ">${text}</div>
-        </div>`;
+    for (let i=1; i<=LABELS; i++){
+        if (!document.getElementById("sel_"+i).checked) continue;
+
+        let text = document.getElementById("emp_"+i).innerText;
+
+        let col = (index % 3);
+        let row = Math.floor(index / 3);
+
+        let x = marginX + col * (labelW + gapX);
+        let y = marginY + row * labelH;
+
+        /* ABSENDER */
+        pdf.setFontSize(8.5);
+        pdf.text(absender, x, y + 4);
+
+        /* EMPFÄNGER */
+        pdf.setFontSize(11);
+        pdf.text(text, x, y + 10, { maxWidth: labelW-4 });
+
+        index++;
     }
 
-    document.getElementById("printLayer").innerHTML = html;
+    pdf.save("etiketten.pdf");
 }
-
 </script>
+
 </head>
 <body>
 
 <div class="topbar">
-    <button class="reset-btn" onclick="resetAll()">Alles zurücksetzen</button>
+    <button class="btn reset-btn" onclick="resetAll()">Reset</button>
+    <button class="btn pdf-btn" onclick="makePDF()">PDF erstellen</button>
 </div>
 
 <div class="sheet">
-
 <script>
-for (let i = 1; i <= 24; i++) {
+for (let i = 1; i <= 24; i++){
 document.write(`
-<div class="label" id="label_${i}">
-    <input type="checkbox" class="selector"
-        id="selector_${i}"
-        onchange="autosaveCheck('selector_${i}')">
-    
-    <div class="absender" contenteditable="true">
-        Abs.: Fatih Kaplan · Agnes-Miegel-Weg 16a · 42553 Velbert
-    </div>
+<div class="label">
+    <input type="checkbox" class="selector" id="sel_${i}" onchange="saveCheck('sel_${i}')">
 
-    <div class="empfaenger"
-        id="empfaenger_${i}"
-        contenteditable="true"
-        onkeyup="autosave('empfaenger_${i}')"
-        onblur="autosave('empfaenger_${i}')">
-    </div>
+    <div class="absender">${absender}</div>
+
+    <div class="empfaenger" id="emp_${i}" contenteditable="true"
+         onkeyup="saveText('emp_${i}')" onblur="saveText('emp_${i}')"></div>
 </div>
 `);
 }
 </script>
-
 </div>
-
-<!-- Unsichtbarer Print-Layer -->
-<div id="printLayer"></div>
 
 </body>
 </html>
