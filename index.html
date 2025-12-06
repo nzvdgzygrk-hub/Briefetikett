@@ -2,15 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- iPhone Druckfix: erzwingt A4-Breite -->
-<meta name="viewport" content="width=210mm, initial-scale=1.0, maximum-scale=1.0">
-
-<title>Avery 3×8 Etiketten – AutoSave + Reset</title>
+<title>Avery Etiketten 3×8 – iPhone Fix + Autosave</title>
 
 <style>
 
-/* WICHTIG: iPhone & Safari Druck FIX */
+/* iPhone + Safari: Erzwinge echtes DIN-A4 Druckformat */
 @page {
     size: A4;
     margin: 0;
@@ -23,79 +21,73 @@ html, body {
     padding: 0;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    background: #f5f5f5;
     font-family: Arial, sans-serif;
+    background: #f5f5f5;
 }
 
 /* Reset Button */
 .topbar {
-    width: 100%;
     max-width: 210mm;
     margin: 10px auto;
     display: flex;
     justify-content: flex-end;
 }
-
 .reset-btn {
     background: #d9534f;
     color: white;
-    border: none;
     padding: 10px 14px;
     border-radius: 6px;
+    border: none;
     font-size: 16px;
-    cursor: pointer;
-}
-.reset-btn:active {
-    background: #c9302c;
 }
 
 /* Avery Zweckform 3×8 Layout */
 .sheet {
+    position: relative;
     width: 210mm;
     height: 297mm;
+
     padding: 12.7mm 7.5mm;
+    background: white;
     box-sizing: border-box;
 
     display: grid;
     grid-template-columns: repeat(3, 63.5mm);
     grid-template-rows: repeat(8, 38.1mm);
     grid-column-gap: 2.5mm;
-    grid-row-gap: 0mm;
-
-    background: white;
-    margin: auto;
+    grid-row-gap: 0;
 }
 
+/* Das sichtbare normale Label */
 .label {
     border: 1px solid #000;
-    padding: 3px;
-    position: relative;
-    box-sizing: border-box;
     background: #fff;
-    overflow: hidden;
+    padding: 3px;
+    box-sizing: border-box;
+    position: relative;
     font-size: 11px;
 }
 
-/* Absender – eine Zeile garantiert passend */
+/* Absender – immer eine Zeile */
 .absender {
+    font-size: 9px;
     font-weight: bold;
-    font-size: 9.5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 2px;
 }
 
-/* Empfänger fix, NICHT verschiebbar */
+/* Empfänger – fix hohe Box */
 .empfaenger {
     border: 1px dashed #555;
+    height: 26mm;
     padding: 3px;
-    height: 26mm;         /* feste Höhe – kein Verrutschen */
+    box-sizing: border-box;
+    font-size: 11px;
     white-space: pre-line;
     overflow: hidden;
-    font-size: 11px;
 }
-
 .empfaenger:focus {
     outline: 2px solid #007AFF;
     background: #eef6ff;
@@ -109,78 +101,117 @@ html, body {
     transform: scale(1.3);
 }
 
-/* Druckmodus */
+/* Spiegel-Drucklayer (unsichtbar am Bildschirm) */
+#printLayer {
+    display: none;
+}
+
+/* Bei Druck: nur den PrintLayer anzeigen */
 @media print {
-    .selector, .topbar {
-        display: none !important;
+
+    body * {
+        visibility: hidden !important;
     }
-    .label:not(.printable) {
-        display: none !important;
+
+    #printLayer, #printLayer * {
+        visibility: visible !important;
     }
-    body {
-        background: white;
-        margin: 0;
-        padding: 0;
-    }
-    .sheet {
-        margin: 0;
+
+    #printLayer {
+        position: absolute;
+        top: 0;
+        left: 0;
     }
 }
 
 </style>
 
 <script>
+
 const LABELS = 24;
 
-/* Laden gespeicherter Daten */
-window.onload = () => {
+/* LOAD SAVED DATA */
+window.onload = function() {
+
     for (let i = 1; i <= LABELS; i++) {
+
         let txt = localStorage.getItem("empfaenger_" + i);
         let checked = localStorage.getItem("selector_" + i) === "true";
 
         if (txt) document.getElementById("empfaenger_" + i).innerText = txt;
         document.getElementById("selector_" + i).checked = checked;
     }
-    updatePrintStatus();
+
+    buildPrintLayer();
 };
 
-/* Auto speichern */
+/* Autosave */
 function autosave(id) {
     localStorage.setItem(id, document.getElementById(id).innerText);
 }
 function autosaveCheck(id) {
-    let el = document.getElementById(id);
+    const el = document.getElementById(id);
     localStorage.setItem(id, el.checked);
-    updatePrintStatus();
+    buildPrintLayer();
 }
 
-/* Bestimmen, welche Etiketten gedruckt werden */
-function updatePrintStatus() {
-    for (let i = 1; i <= LABELS; i++) {
-        let box = document.getElementById("selector_" + i);
-        let label = document.getElementById("label_" + i);
-        if (box.checked) label.classList.add("printable");
-        else label.classList.remove("printable");
-    }
-}
-
-/* RESET → löscht ALLES außer Absender */
+/* RESET */
 function resetAll() {
+
     for (let i = 1; i <= LABELS; i++) {
+        document.getElementById("empfaenger_" + i).innerText = "";
+        document.getElementById("selector_" + i).checked = false;
 
-        let emp = document.getElementById("empfaenger_" + i);
-        emp.innerText = "";
         localStorage.removeItem("empfaenger_" + i);
-
-        let box = document.getElementById("selector_" + i);
-        box.checked = false;
         localStorage.removeItem("selector_" + i);
     }
-    updatePrintStatus();
-    alert("Alle Felder zurückgesetzt!");
-}
-</script>
 
+    buildPrintLayer();
+    alert("Alles zurückgesetzt!");
+}
+
+/* Build PRINT MIRROR LAYER */
+function buildPrintLayer() {
+
+    let html = "";
+
+    for (let i = 1; i <= LABELS; i++) {
+
+        let checked = document.getElementById("selector_" + i).checked;
+        let text = document.getElementById("empfaenger_" + i).innerText;
+
+        if (!checked) continue;
+
+        html += `
+        <div style="
+            border:1px solid #000;
+            box-sizing:border-box;
+            padding:3px;
+            font-size:11px;
+            width:63.5mm;
+            height:38.1mm;
+            position:absolute;
+            left:${((i-1)%3)*66}mm;
+            top:${(Math.floor((i-1)/3))*38.1}mm;
+        ">
+            <div style="font-size:9px;font-weight:bold;">
+                Abs.: Fatih Kaplan · Agnes-Miegel-Weg 16a · 42553 Velbert
+            </div>
+            <div style="
+                border:1px dashed #555;
+                height:26mm;
+                white-space:pre-line;
+                font-size:11px;
+                padding:3px;
+                overflow:hidden;
+            ">${text}</div>
+        </div>`;
+    }
+
+    document.getElementById("printLayer").innerHTML = html;
+}
+
+</script>
 </head>
 <body>
 
@@ -189,26 +220,34 @@ function resetAll() {
 </div>
 
 <div class="sheet">
+
 <script>
 for (let i = 1; i <= 24; i++) {
 document.write(`
-    <div class="label" id="label_${i}">
-        <input type="checkbox" class="selector" id="selector_${i}"
-            onchange="autosaveCheck('selector_${i}')">
-
-        <div class="absender" contenteditable="true">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-
-        <div class="empfaenger" id="empfaenger_${i}"
-            contenteditable="true"
-            onkeyup="autosave('empfaenger_${i}')"
-            onblur="autosave('empfaenger_${i}')"></div>
+<div class="label" id="label_${i}">
+    <input type="checkbox" class="selector"
+        id="selector_${i}"
+        onchange="autosaveCheck('selector_${i}')">
+    
+    <div class="absender" contenteditable="true">
+        Abs.: Fatih Kaplan · Agnes-Miegel-Weg 16a · 42553 Velbert
     </div>
+
+    <div class="empfaenger"
+        id="empfaenger_${i}"
+        contenteditable="true"
+        onkeyup="autosave('empfaenger_${i}')"
+        onblur="autosave('empfaenger_${i}')">
+    </div>
+</div>
 `);
 }
 </script>
+
 </div>
+
+<!-- Unsichtbarer Print-Layer -->
+<div id="printLayer"></div>
 
 </body>
 </html>
