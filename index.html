@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Avery 3×8 Etiketten – FINALE VERSION</title>
+<title>Avery 3×8 Etiketten – FINAL 6pt Version</title>
 
-<!-- pdf-lib -->
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 
 <style>
@@ -33,7 +32,7 @@ body {
   color: white;
 }
 .reset-btn { background: #d9534f; }
-.pdf-btn { background: #0275d8; }
+.pdf-btn   { background: #0275d8; }
 
 .sheet {
   max-width: 210mm;
@@ -56,7 +55,7 @@ body {
 }
 
 .absender {
-  font-size: 8px;
+  font-size: 6px; /* ⭐ FINAL: passt sicher in 63,5 mm */
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
@@ -93,8 +92,8 @@ body {
 <script>
 const LABELS = 24;
 
-// ⭐ FINAL PASSENDE ABSENDERZEILE
-const absenderText = "Abs.: F. Kaplan · A.-M.-Weg 16a · 42553 Velbert";
+// ⭐ DEINE ORIGINAL-ABSENDERZEILE, jetzt in 6pt → passt sicher!
+const absenderText = "Abs.: Fatih Kaplan · Agnes-Miegel-Weg 16a · 42553 Velbert";
 
 /* HTML erzeugen */
 for (let i = 1; i <= LABELS; i++) {
@@ -107,7 +106,7 @@ for (let i = 1; i <= LABELS; i++) {
     </div>`);
 }
 
-/* LOAD / SAVE */
+/* SAVE + LOAD */
 window.onload = () => {
   for (let i = 1; i <= LABELS; i++) {
     let t = localStorage.getItem("emp_" + i);
@@ -116,6 +115,7 @@ window.onload = () => {
     document.getElementById("sel_" + i).checked = c;
   }
 };
+
 function saveText(id){ localStorage.setItem(id, document.getElementById(id).innerText); }
 function saveCheck(id){ localStorage.setItem(id, document.getElementById(id).checked); }
 
@@ -127,23 +127,28 @@ function resetAll(){
     localStorage.removeItem("emp_"+i);
     localStorage.removeItem("sel_"+i);
   }
-  alert("Alles zurückgesetzt!");
+  alert("Alles zurückgesetzt.");
 }
 
-/* ------------------------ */
-/*      PDF-GENERATOR       */
-/* ------------------------ */
+/* ------------------------------------------------ */
+/*                 PDF GENERATOR                    */
+/* ------------------------------------------------ */
 
 async function makePDF() {
 
   const pdfDoc = await PDFLib.PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4
+  const page = pdfDoc.addPage([595, 842]); // A4 
   const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
   const mm = v => v * 2.83465;
 
-  const labelW = 63.5, labelH = 38.1, marginX = 7.5, marginY = 12.7, gapX = 2.5;
+  const labelW = 63.5;
+  const labelH = 38.1;
+  const marginX = 7.5;
+  const marginY = 12.7;
+  const gapX = 2.5;
 
-  // ⭐ Textumbruch
+  // ⭐ Text-Umbruch
   function wrapText(text, maxWidthPt, fontSize) {
     const words = text.split(" ");
     let lines = [];
@@ -171,19 +176,17 @@ async function makePDF() {
 
     let x = mm(marginX + col * (labelW + gapX));
     let yTop = 842 - mm(marginY + row * labelH);
-
-    // ⭐ Koordinaten
     let yBase = yTop - mm(labelH);
 
-    // ⭐ Absender
+    /* ⭐ ABSENDER: JETZT IN 6pt */
     page.drawText(absenderText, {
       x: x,
-      y: yBase + mm(labelH) - mm(6),
-      size: 8,
+      y: yBase + mm(labelH) - mm(5),
+      size: 6,
       font
     });
 
-    // ⭐ Empfänger (multiline)
+    /* ⭐ EMPFÄNGER */
     const fontSize = 11;
     const maxWidthPt = mm(labelW - 4);
     const lineHeight = 12;
@@ -193,13 +196,15 @@ async function makePDF() {
     let yText = yBase + mm(labelH) - mm(16);
 
     for (let line of lines) {
-      if (yText < yBase + 4) break;
+      if (yText < yBase + 5) break;
+
       page.drawText(line, {
         x: x,
         y: yText,
         size: fontSize,
         font
       });
+
       yText -= lineHeight;
     }
   }
@@ -208,7 +213,7 @@ async function makePDF() {
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
 
-  // ⭐ iPhone-Fix – Direktdownload statt neues Fenster
+  // ⭐ iPhone-safe PDF Download
   const a = document.createElement("a");
   a.href = url;
   a.download = "etiketten.pdf";
