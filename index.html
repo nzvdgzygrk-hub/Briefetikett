@@ -2,19 +2,20 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Etiketten mit Druckauswahl</title>
+<title>Etiketten – 5 Reihen × 3 Spalten</title>
 
 <style>
     body {
         font-family: Arial, sans-serif;
-        margin: 20px;
+        margin: 0;
+        padding: 20px;
     }
 
     .page {
         width: 210mm;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        grid-auto-rows: 45mm;
+        grid-template-rows: repeat(5, 45mm);
         gap: 4mm;
     }
 
@@ -24,13 +25,13 @@
         position: relative;
         box-sizing: border-box;
         background: #fff;
+        font-size: 12px;
     }
 
     .absender {
         font-weight: bold;
-        font-size: 12px;
         margin-bottom: 5px;
-        line-height: 1.2;
+        white-space: nowrap;
     }
 
     .empfaenger {
@@ -52,16 +53,17 @@
         transform: scale(1.2);
     }
 
-    /* Beim Drucken NICHT ausgewählte Etiketten ausblenden */
+    /* Beim Drucken nur angehakte Etiketten zeigen */
     @media print {
         .label:not(.printable) {
             display: none !important;
         }
         .selector {
-            display: none; /* Checkbox nicht drucken */
+            display: none;
         }
         body {
             margin: 0;
+            padding: 0;
         }
     }
 </style>
@@ -82,44 +84,145 @@
 </head>
 <body>
 
-<h2>Etiketten – auswählbar für Druck</h2>
-<p>✔ Häkchen setzen → wird gedruckt  
-✔ Häkchen weg → erscheint nicht im Druck</p>
-
 <div class="page">
 
-    <!-- TEMPLATE – beliebig duplizierbar -->
+    <!-- 15 Etiketten -->
+    <!-- Wiederhole Block 15× -->
+
+    <!-- 1 -->
     <div class="label">
         <input type="checkbox" class="selector" onchange="updatePrintStatus()">
         <div class="absender">
-            Abs.: Fatih Kaplan<br>
-            In den Fliethen 5<br>
-            42551 Velbert
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
         </div>
         <div class="empfaenger" contenteditable="true"></div>
     </div>
 
+    <!-- 2 -->
     <div class="label">
         <input type="checkbox" class="selector" onchange="updatePrintStatus()">
         <div class="absender">
-            Abs.: Fatih Kaplan<br>
-            In den Fliethen 5<br>
-            42551 Velbert
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
         </div>
         <div class="empfaenger" contenteditable="true"></div>
     </div>
 
+    <!-- 3 -->
     <div class="label">
         <input type="checkbox" class="selector" onchange="updatePrintStatus()">
         <div class="absender">
-            Abs.: Fatih Kaplan<br>
-            In den Fliethen 5<br>
-            42551 Velbert
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
         </div>
         <div class="empfaenger" contenteditable="true"></div>
     </div>
 
-    <!-- Mehr Etiketten → einfach kopieren -->
+    <!-- 4 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 5 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 6 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 7 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 8 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 9 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 10 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 11 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 12 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 13 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 14 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
+
+    <!-- 15 -->
+    <div class="label">
+        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
+        <div class="absender">
+            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+        </div>
+        <div class="empfaenger" contenteditable="true"></div>
+    </div>
 
 </div>
 
