@@ -2,227 +2,148 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Etiketten – 5 Reihen × 3 Spalten</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Avery 3×8 Etiketten – AutoSave</title>
 
 <style>
     body {
         font-family: Arial, sans-serif;
         margin: 0;
-        padding: 20px;
+        padding: 0;
+        background: #f5f5f5;
     }
 
-    .page {
+    /* Avery Zweckform Layout 3×8 */
+    .sheet {
         width: 210mm;
+        height: 297mm;
+        padding: 12.7mm 7.5mm;
+        box-sizing: border-box;
+
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(5, 45mm);
-        gap: 4mm;
+        grid-template-columns: repeat(3, 63.5mm);
+        grid-template-rows: repeat(8, 38.1mm);
+        grid-column-gap: 2.5mm;
+        grid-row-gap: 0mm;
+
+        margin: auto;
+        background: white;
     }
 
     .label {
         border: 1px solid #000;
-        padding: 5px;
+        padding: 3px;
         position: relative;
         box-sizing: border-box;
+        font-size: 11px;
         background: #fff;
-        font-size: 12px;
+        overflow: hidden; /* verhindert Verschieben */
     }
 
     .absender {
         font-weight: bold;
-        margin-bottom: 5px;
         white-space: nowrap;
+        margin-bottom: 2px;
+        font-size: 10px;
     }
 
     .empfaenger {
-        border: 1px dashed #444;
-        padding: 4px;
-        min-height: 28mm;
+        border: 1px dashed #555;
+        padding: 3px;
+        height: 26mm;             /* FIXE Höhe – NICHT verschiebbar */
         white-space: pre-line;
+        font-size: 11px;
+        overflow: hidden;
     }
 
     .empfaenger[contenteditable="true"]:focus {
         outline: 2px solid #007AFF;
+        background: #eef6ff;
     }
 
-    /* Checkbox oben rechts */
     .selector {
         position: absolute;
-        top: 3px;
-        right: 3px;
+        top: 2px;
+        right: 2px;
         transform: scale(1.2);
     }
 
-    /* Beim Drucken nur angehakte Etiketten zeigen */
     @media print {
-        .label:not(.printable) {
-            display: none !important;
+        body {
+            padding: 0;
+            margin: 0;
+            background: white;
         }
         .selector {
             display: none;
         }
-        body {
+        .label:not(.printable) {
+            display: none !important;
+        }
+        .sheet {
             margin: 0;
-            padding: 0;
         }
     }
 </style>
 
 <script>
+    const LABELS = 24;
+
+    window.onload = () => {
+        for (let i = 1; i <= LABELS; i++) {
+            const txt = localStorage.getItem("empfaenger_" + i);
+            const checked = localStorage.getItem("selector_" + i) === "true";
+
+            if (txt) document.getElementById("empfaenger_" + i).innerText = txt;
+            document.getElementById("selector_" + i).checked = checked;
+        }
+        updatePrintStatus();
+    };
+
+    function autosave(id) {
+        const el = document.getElementById(id);
+        localStorage.setItem(id, el.innerText);
+    }
+
+    function autosaveCheck(id) {
+        const el = document.getElementById(id);
+        localStorage.setItem(id, el.checked);
+        updatePrintStatus();
+    }
+
     function updatePrintStatus() {
-        document.querySelectorAll('.label').forEach(label => {
-            const checkbox = label.querySelector('.selector');
-            if (checkbox.checked) {
-                label.classList.add('printable');
-            } else {
-                label.classList.remove('printable');
-            }
-        });
+        for (let i = 1; i <= LABELS; i++) {
+            const box = document.getElementById("selector_" + i);
+            const label = document.getElementById("label_" + i);
+            if (box.checked) label.classList.add("printable");
+            else label.classList.remove("printable");
+        }
     }
 </script>
 
 </head>
 <body>
 
-<div class="page">
+<div class="sheet">
 
-    <!-- 15 Etiketten -->
-    <!-- Wiederhole Block 15× -->
+<script>
+for (let i = 1; i <= 24; i++) {
+    document.write(`
+        <div class="label" id="label_${i}">
+            <input type="checkbox" class="selector" id="selector_${i}"
+                onchange="autosaveCheck('selector_${i}')">
 
-    <!-- 1 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+            <div class="absender">
+                Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
+            </div>
+
+            <div class="empfaenger" id="empfaenger_${i}" contenteditable="true"
+                onkeyup="autosave('empfaenger_${i}')"
+                onblur="autosave('empfaenger_${i}')"></div>
         </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 2 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 3 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 4 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 5 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 6 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 7 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 8 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 9 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 10 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 11 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 12 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 13 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 14 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
-
-    <!-- 15 -->
-    <div class="label">
-        <input type="checkbox" class="selector" onchange="updatePrintStatus()">
-        <div class="absender">
-            Abs.: Fatih Kaplan – Agnes-Miegel-Weg 16a – 42553 Velbert
-        </div>
-        <div class="empfaenger" contenteditable="true"></div>
-    </div>
+    `);
+}
+</script>
 
 </div>
 
